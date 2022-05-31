@@ -25,7 +25,7 @@ def load_cows(filename):
     Returns:
     a dictionary of cow name (string), weight (int) pairs
     """
-    # TODO: Your code here
+    # Open the file and output the data as a dictionary
     with open(filename, 'r') as data:
         return dict(csv.reader(data))
 
@@ -52,9 +52,47 @@ def greedy_cow_transport(cows,limit=10):
     transported on a particular trip and the overall list containing all the
     trips
     """
-    # TODO: Your code here
-    pass
-
+    # Extract the cow names (keys) and cow weights(values)
+    names = list(cows.keys())
+    weights_str = list(cows.values())
+    
+    # Convert the weights to integers
+    weights = [int(i) for i in weights_str]
+    
+    # Initialize the parameters for the loop
+    trip_idx = 0    # Index of current trip
+    trip_weight = 0 # Total weight of the cows in the current trip
+    trips = [[]]    # List to contain lists of the cows in each trip
+    
+    # Loop through and add each cow to a trip
+    for i in range(len(weights)):
+        # Go to the next trip all cows would exceed the weight limit
+        if min(weights) + trip_weight > limit:
+            trip_idx += 1
+            trip_weight = 0
+            trips.append([])
+        
+        # Sort the weights in reverse order and iterate until an acceptable
+        # weight is found
+        for weight in sorted(weights, reverse=True):
+            if weight + trip_weight <= limit:
+                break
+        
+        # Add the weight to the trip_weight
+        trip_weight += weight
+            
+        # Get the index for the chosen weight
+        weight_idx = weights.index(weight)
+        
+        # Remove the current weight from the list
+        del weights[weight_idx]
+        
+        # Pop out the name for the current weight and assign it to 'trips'
+        trips[trip_idx].append(names.pop(weight_idx))
+        
+    return trips
+            
+    
 # Problem 3
 def brute_force_cow_transport(cows,limit=10):
     """
@@ -77,11 +115,54 @@ def brute_force_cow_transport(cows,limit=10):
     transported on a particular trip and the overall list containing all the
     trips
     """
-    # TODO: Your code here
-    pass
+    # Initialize variable to keep track of the best option
+    best_partition = []
+    
+    # Extract the cow names (keys) and cow weights(values)
+    names = list(cows.keys())
+    weights_str = list(cows.values())
+    
+    # Convert the weights to integers
+    weights = [int(i) for i in weights_str]
+    
+    # Partition the cow weights
+    for partition in get_partitions(range(len(cows))):
+        # If the length of this partition is not shorter than the best option
+        # then continue onto the next one. Ensure the best partition isn't
+        # empty
+        if len(partition) >= len(best_partition) and len(best_partition) > 0:
+            continue
+        
+        # Check that each trip meets the weight limit requirement
+        partition_is_valid = True
+        for trip_partition in partition:
+            # Set the starting trip weight to zero
+            trip_weight = 0
+            
+            # Loop through each cow and add the weight to the trip weight
+            for cow_idx in trip_partition:
+                trip_weight += weights[cow_idx]
+            
+            # If the trip weight exceeds the limit then the entire partition is
+            # invalid
+            if trip_weight > limit:
+                partition_is_valid = False
+                break
+        
+        # Update the best partition if the current partition is valid
+        if partition_is_valid:
+            best_partition = []
+            # Assemble the nested lists containing the best names
+            for trip in partition:
+                best_partition.append([])
+                for cow_idx in trip:
+                    best_partition[-1].append(names[cow_idx])
+                    
+    return best_partition
+                
         
 # Problem 4
-def compare_cow_transport_algorithms():
+def compare_cow_transport_algorithms(filename):
     """
     Using the data from ps1_cow_data.txt and the specified weight limit, run your
     greedy_cow_transport and brute_force_cow_transport functions here. Use the
@@ -94,5 +175,19 @@ def compare_cow_transport_algorithms():
     Returns:
     Does not return anything.
     """
-    # TODO: Your code here
-    pass
+    # Load the specified file data as a dictionary
+    cows = load_cows(filename)
+    
+    # Run and time the greedy algorithm
+    start = time.time()
+    trips_greedy = greedy_cow_transport(cows)
+    end = time.time()
+    print(trips_greedy)
+    print(end - start)
+    
+    # Run and time the brute force algorithm
+    start = time.time()
+    trips_brute = brute_force_cow_transport(cows)
+    end = time.time()
+    print(trips_brute)
+    print(end - start)

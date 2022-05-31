@@ -22,8 +22,18 @@ def dp_make_weight(egg_weights, target_weight, memo = {}):
     
     Returns: int, smallest number of eggs needed to make target weight
     """
-    # TODO: Your code here
-    pass
+    # Loop through each egg weight class, starting with the largest first
+    egg_weights_sorted = sorted(egg_weights, reverse=True)
+    num_eggs = 0
+    for weight in egg_weights_sorted:
+        num_eggs += target_weight // weight
+        target_weight = target_weight % weight
+        
+        if target_weight == 0:
+            break
+    
+    return num_eggs
+        
 
 # EXAMPLE TESTING CODE, feel free to add more if you'd like
 if __name__ == '__main__':
